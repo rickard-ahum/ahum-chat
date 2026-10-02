@@ -1,0 +1,192 @@
+/* Färger från Ahums webbplats (works.ahum.se) */
+:root {
+  --bg: #f9f5f1;          /* beige bakgrund */
+  --surface: #ffffff;
+  --text: #202031;        /* mörk marinblå text */
+  --text-2: #353551;
+  --muted: #72729c;
+  --border: #ebe4dc;
+  --accent: #e0214b;      /* Ahum-rosa/röd, knappar */
+  --accent-text: #ffffff;
+  --accent-ink: #d81b44;  /* länkar och text i accentfärg */
+  --accent-soft: #ffeef2; /* ljusrosa */
+  --error: #b3261e;
+  --user: #ffeef2;
+  --program: #e0214b;
+  --program-text: #ffffff;
+  --program-soft: #ffeef2;
+  --program-ink: #d81b44;
+  --module: #5daeb6;      /* Ahum-turkos */
+  --module-soft: #dbf1f2;
+  --module-ink: #276a71;
+  --shadow: 0 2px 14px rgba(32, 32, 49, .07);
+  --font: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Clash Display", "Satoshi", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16161f;
+    --surface: #202031;
+    --text: #f4f2f7;
+    --text-2: #d9d7e6;
+    --muted: #a9a9c8;
+    --border: #34344a;
+    --accent: #e0214b;
+    --accent-text: #ffffff;
+    --accent-ink: #ff7a96;
+    --accent-soft: #3a2232;
+    --error: #f2b8b5;
+    --user: #3a2232;
+    --program: #e0214b;
+    --program-text: #ffffff;
+    --program-soft: #3a2232;
+    --program-ink: #ff7a96;
+    --module: #5daeb6;
+    --module-soft: #1c3436;
+    --module-ink: #8fd3d9;
+    --shadow: 0 2px 14px rgba(0, 0, 0, .45);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.55 var(--font);
+}
+
+h1, h2, h3, .brand { font-family: var(--font-display); font-weight: 500; }
+h1 { font-size: 1.6rem; margin: 0 0 6px; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.error { color: var(--error); }
+
+input, textarea { font: inherit; color: inherit; }
+button { font: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.link { background: none; border: 0; color: var(--accent-ink); padding: 0; text-decoration: underline; font-size: .9rem; }
+.ghost {
+  background: var(--accent-soft); border: 0; color: var(--accent-ink); border-radius: 999px;
+  padding: 6px 14px; font-size: .9rem; font-weight: 500;
+}
+.primary {
+  border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 600;
+  background: var(--accent); color: var(--accent-text);
+}
+
+/* Token */
+.center-screen { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+.token-panel { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+.token-panel label { font-weight: 600; margin-top: 8px; }
+.token-panel input { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 10px 16px; }
+.token-panel input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.token-panel p { margin: 0; }
+
+/* Appram: toppfält, samtal som rullar, inmatning längst ner */
+.app { height: 100dvh; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg);
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.topbar-actions { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+.brand { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.logo, .avatar {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-text); font-weight: 700; font-size: .85rem; flex: none;
+}
+.scroll { flex: 1; overflow-y: auto; }
+.column { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+
+/* Tomt läge */
+.empty { min-height: 60dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 8px; }
+.empty h2 { font-size: 1.7rem; margin: 0; }
+.empty p { max-width: 520px; margin: 0; }
+.starters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 20px; width: 100%; max-width: 600px; }
+.starter {
+  text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px 14px; color: var(--text);
+}
+.starter:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-size: .85rem; color: var(--muted); margin-top: 20px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Meddelanden */
+.exchange { display: flex; flex-direction: column; gap: 18px; padding-bottom: 24px; }
+.msg-user { display: flex; justify-content: flex-end; }
+.msg-user .bubble {
+  max-width: 80%; background: var(--user); color: var(--text); border-radius: 18px; padding: 10px 16px; white-space: pre-wrap;
+}
+.msg-assistant { display: flex; gap: 12px; align-items: flex-start; }
+.assistant-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.assistant-text { margin: 3px 0 0; white-space: pre-wrap; }
+.results-intro { margin: 4px 0 0; color: var(--muted); font-size: .92rem; }
+.cards { display: flex; flex-direction: column; gap: 10px; }
+
+.typing { display: inline-flex; gap: 5px; padding: 10px 0; }
+.typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
+.typing span:nth-child(2) { animation-delay: .15s; }
+.typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* Märken */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 700;
+  letter-spacing: .03em; text-transform: uppercase; border-radius: 6px; padding: 2px 8px;
+}
+.badge.program { background: var(--program); color: var(--program-text); }
+.badge.modul { background: var(--module-soft); color: var(--module-ink); border: 1px solid var(--module); }
+
+/* Kort */
+.card { background: var(--surface); border: 1px solid var(--border); border-left-width: 5px; border-radius: 12px; padding: 14px 16px; }
+.card.program { border-left-color: var(--program); }
+.card.modul { border-left-color: var(--module); }
+.card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rank {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--border); font-weight: 700; font-size: .8rem;
+}
+.best { font-size: .8rem; font-weight: 600; color: var(--accent-ink); }
+.card h3 { margin: 6px 0 2px; font-size: 1.05rem; }
+.card p { margin: 4px 0; }
+.card .muted { font-size: .9rem; }
+.relation { margin-top: 8px; font-size: .9rem; }
+.relation-title { color: var(--muted); margin-right: 6px; }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 6px; vertical-align: middle; }
+.chip {
+  font-size: .85rem; border-radius: 999px; padding: 2px 10px;
+  background: var(--program-soft); color: var(--program-ink); border: 1px solid var(--program);
+}
+details summary { cursor: pointer; color: var(--muted); }
+details ul { margin: 6px 0 0; padding-left: 20px; }
+
+/* Inmatning */
+.composer-wrap { padding: 8px 16px 12px; background: var(--bg); }
+.composer {
+  max-width: 760px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+  padding: 8px 8px 8px 18px; box-shadow: var(--shadow);
+}
+.composer:focus-within { border-color: var(--accent); }
+.composer textarea {
+  flex: 1; border: 0; outline: 0; background: transparent; resize: none;
+  padding: 7px 0; max-height: 168px; line-height: 1.5;
+}
+.send {
+  width: 36px; height: 36px; border-radius: 50%; border: 0; flex: none;
+  background: var(--accent); color: var(--accent-text); font-size: 1.1rem; font-weight: 700;
+}
+.composer-note { max-width: 760px; margin: 6px auto 0; text-align: center; font-size: .78rem; }
+
+@media (max-width: 560px) {
+  .starters { grid-template-columns: 1fr; }
+  .brand { font-size: .95rem; }
+  .hide-mobile { display: none; }
+  .ghost { padding: 5px 10px; }
+  .msg-user .bubble { max-width: 90%; }
+  .avatar { width: 24px; height: 24px; font-size: .75rem; }
+}
