@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hitta rätt program",
+  title: "Ahum chatt",
   description: "Hitta program och moduler från Ahum som passar det du vill ha hjälp med.",
 };
 

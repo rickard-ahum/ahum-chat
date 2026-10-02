@@ -127,7 +127,7 @@ function TokenStep({ onReady }: { onReady: (token: string, info: { programs: num
   return (
     <div className="center-screen">
       <form className="panel token-panel" onSubmit={submit}>
-        <h1>Hitta rätt program</h1>
+        <h1>Ahum chatt</h1>
         <p className="muted">Prata med oss om vad du vill ha hjälp med, så föreslår vi program och moduler från Ahum.</p>
         <label htmlFor="token">Token för Ahum-API:t</label>
         <input
@@ -246,7 +246,7 @@ function Chat({
           <span className="logo" aria-hidden>
             A
           </span>
-          Hitta rätt program
+          Ahum chatt
         </div>
         <div className="topbar-actions">
           <button type="button" className="ghost" onClick={newConversation} disabled={sending || empty}>
