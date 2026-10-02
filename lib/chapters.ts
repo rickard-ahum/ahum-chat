@@ -1,5 +1,6 @@
 // Hämtar en moduls innehåll (kapitel, avsnitt och sidor i modulens ordning) från
-// Ahum-API:t via GET /page/treeview-pages/{module_id}/{lang}. Det hämtas först när
+// Ahum-API:t via GET /page/treeview-pages/{module_id}/{lang}. Sidorna (och deras frågor)
+// används inte, bara kapitel och avsnitt. Det hämtas först när
 // användaren fäller ut "Visa kapitel".
 import { createHash } from "node:crypto";
 import { API_BASE, HttpError, stripHtml, type CatalogItem, type Chapter } from "./catalog";
@@ -72,15 +73,11 @@ function fromFlat(list: Node[]): Chapter[] | undefined {
         .filter((s) => typeOf(s).includes("section") && parentOf(s) === idOf(chapter))
         .map((s, j) => ({
           name: nameOf(s) ?? `Avsnitt ${j + 1}`,
-          pages: visible
-            .filter((p) => typeOf(p).includes("page") && parentOf(p) === idOf(s))
-            .map((p) => nameOf(p))
-            .filter((n): n is string => !!n),
         })),
     }));
 }
 
-// Nästlat träd: kapitel -> avsnitt -> sidor.
+// Nästlat träd: kapitel -> avsnitt (-> sidor, som hoppas över).
 function fromTree(list: Node[]): Chapter[] {
   return list
     .filter((n) => !isHidden(n))
@@ -92,10 +89,6 @@ function fromTree(list: Node[]): Chapter[] {
         .filter((s) => !isHidden(s))
         .map((section, j) => ({
           name: nameOf(section) ?? `Avsnitt ${j + 1}`,
-          pages: childrenOf(section)
-            .filter((p) => !isHidden(p))
-            .map((p) => nameOf(p))
-            .filter((n): n is string => !!n),
         })),
     }));
 }
@@ -110,11 +103,9 @@ function describe(body: unknown): string {
         : typeof v;
   const root = rootList(body);
   const sections = root[0] ? childrenOf(root[0]) : [];
-  const pages = sections[0] ? childrenOf(sections[0]) : [];
   return (
     `svar: ${shape(body)}; kapitelnivå: ${shape(root)}` +
-    (sections.length ? `; avsnittsnivå: ${shape(sections)}` : "") +
-    (pages.length ? `; sidnivå: ${shape(pages)}` : "")
+    (sections.length ? `; avsnittsnivå: ${shape(sections)}` : "")
   );
 }
 
@@ -166,8 +157,7 @@ export async function getChapters(token: string, module: CatalogItem): Promise<C
     await fillChapterNames(token, chapters);
     console.log(
       `[kapitel] ${chapters.length} kapitel, ` +
-        `${chapters.reduce((n, c) => n + (c.sections?.length ?? 0), 0)} avsnitt, ` +
-        `${chapters.reduce((n, c) => n + (c.sections ?? []).reduce((m, s) => m + s.pages.length, 0), 0)} sidor`,
+        `${chapters.reduce((n, c) => n + (c.sections?.length ?? 0), 0)} avsnitt`,
     );
     cache.set(key, { at: Date.now(), chapters });
     return chapters;

@@ -201,7 +201,6 @@ details ul { margin: 6px 0 0; padding-left: 20px; }
 .chapters .sections { margin: 2px 0 4px; padding-left: 18px; font-size: .9rem; list-style: disc; }
 .chapters .sections summary { color: var(--text); }
 .chapters .count { color: var(--muted); font-size: .85rem; }
-.chapters .pages { margin: 2px 0 4px; padding-left: 18px; color: var(--muted); font-size: .85rem; list-style: circle; }
 .relation > .chapter-list, .relation > .program-modules { margin: 6px 0 0; padding-left: 22px; }
 .program-modules > li { margin: 6px 0; }
 .program-modules summary { color: var(--text); }

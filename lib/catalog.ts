@@ -14,7 +14,7 @@ export type Kind = "program" | "modul";
 
 export type Ref = { id: string; name: string; chapterCount?: number };
 
-export type Section = { name: string; pages: string[] };
+export type Section = { name: string };
 
 export type Chapter = { id: string; name: string; description?: string; sections?: Section[] };
 

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 
 type Kind = "program" | "modul";
 type Ref = { id: string; name: string; chapterCount?: number };
-type Section = { name: string; pages: string[] };
+type Section = { name: string };
 type Chapter = { id: string; name: string; description?: string; sections?: Section[] };
 type Recommendation = {
   id: string;
@@ -540,22 +540,7 @@ function ChapterList({ moduleId, initial }: { moduleId: string; initial?: Chapte
                 {c.description && <p className="chapter-desc">{c.description}</p>}
                 <ul className="sections">
                   {sections.map((section, i) => (
-                    <li key={i}>
-                      {section.name}
-                      {section.pages.length > 0 && (
-                        <span className="count">
-                          {" "}
-                          ({section.pages.length} {section.pages.length === 1 ? "sida" : "sidor"})
-                        </span>
-                      )}
-                      {section.pages.length > 0 && (
-                        <ul className="pages">
-                          {section.pages.map((p, j) => (
-                            <li key={j}>{p}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
+                    <li key={i}>{section.name}</li>
                   ))}
                 </ul>
               </details>
