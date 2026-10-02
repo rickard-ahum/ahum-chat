@@ -25,6 +25,7 @@ samtalet för att smalna av förslagen.
 - `app/api/chat/route.ts` – tar emot samtalet och returnerar svar och förslag
 - `lib/catalog.ts` – hämtar och kopplar ihop katalogen från Ahum-API:t
 - `lib/recommend.ts` – anropet till Claude
+- `lib/chapters.ts` och `app/api/chapters/route.ts` – hämtar kapitelnamn när användaren fäller ut "Visa kapitel" på en modul
 
 ## Köra
 

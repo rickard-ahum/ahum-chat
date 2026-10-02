@@ -3,7 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { HttpError, type CatalogItem, type Ref } from "./catalog";
+import { HttpError, type CatalogItem, type Chapter, type Ref } from "./catalog";
 
 const MODEL = "claude-opus-5-5";
 const MAX_TURNS = 30;
@@ -31,6 +31,8 @@ export type Recommendation = {
   name: string;
   description: string;
   reason: string;
+  chapterCount: number;
+  chapters?: Chapter[];
   modules: Ref[];
   programs: Ref[];
 };
@@ -143,6 +145,8 @@ export async function chat(catalog: CatalogItem[], rawTurns: unknown): Promise<C
       name: item.name,
       description: item.description,
       reason: r.reason,
+      chapterCount: item.chapters?.length ?? item.chapterIds?.length ?? 0,
+      chapters: item.chapters,
       modules: item.modules ?? [],
       programs: item.programs ?? [],
     });

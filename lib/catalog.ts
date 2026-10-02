@@ -2,7 +2,7 @@
 // där program känner till sina moduler och moduler känner till sina program.
 import { createHash } from "node:crypto";
 
-const API_BASE = process.env.AHUM_API_BASE ?? "https://prod-icbt-api.ahum.se/api";
+export const API_BASE = process.env.AHUM_API_BASE ?? "https://prod-icbt-api.ahum.se/api";
 const SOURCES = [
   { kind: "program", url: `${API_BASE}/programs/sv?paginate=0` },
   { kind: "modul", url: `${API_BASE}/modules/sv?paginate=0` },
@@ -12,7 +12,11 @@ const MAX_LONG_DESCRIPTION = 800;
 
 export type Kind = "program" | "modul";
 
-export type Ref = { id: string; name: string };
+export type Ref = { id: string; name: string; chapterCount?: number };
+
+export type Section = { name: string; pages: string[] };
+
+export type Chapter = { id: string; name: string; description?: string; sections?: Section[] };
 
 export type CatalogItem = {
   id: string; // "program-<id>" eller "modul-<id>"
@@ -22,6 +26,9 @@ export type CatalogItem = {
   long_description: string;
   categories: unknown[];
   type: unknown;
+  apiIds?: string[]; // för moduler: modulens id och _id i Ahum-API:t
+  chapterIds?: string[]; // för moduler: id:n i chapter_ids
+  chapters?: Chapter[]; // för moduler: kapitel, om API:t redan skickar med namnen
   modules?: Ref[]; // för program: modulerna som ingår
   programs?: Ref[]; // för moduler: programmen modulen ingår i
   duration?: unknown;
@@ -125,6 +132,12 @@ function resolveModule(entry: unknown, modulesByAnyId: Map<string, Raw>): Raw | 
   return undefined;
 }
 
+export function chapterFrom(c: Record<string, any>): Chapter | undefined {
+  const name = c.name ?? c.title ?? c.heading ?? c.label;
+  if (typeof name !== "string" || !name.trim()) return undefined;
+  return { id: String(c.id ?? c._id ?? name), name: stripHtml(name) };
+}
+
 // --- Katalog -----------------------------------------------------------------
 
 const catalogCache = new Map<string, { at: number; items: CatalogItem[] }>(); // sha256(token) -> katalog
@@ -168,6 +181,16 @@ export async function getCatalog(token: string): Promise<CatalogItem[]> {
       if (raw.is_parenting_guide != null) item.is_parenting_guide = raw.is_parenting_guide;
     } else {
       item.programs = [];
+      item.apiIds = [...new Set([raw.id, raw._id].filter((v) => v != null && v !== "").map(String))];
+      const entries: unknown[] = Array.isArray(raw.chapter_ids) ? raw.chapter_ids : Array.isArray(raw.chapters) ? raw.chapters : [];
+      item.chapterIds = entries
+        .map((c) => (c && typeof c === "object" ? ((c as any).id ?? (c as any)._id) : c))
+        .filter((v) => v != null && v !== "")
+        .map(String);
+      const inline = entries
+        .map((c) => (c && typeof c === "object" ? chapterFrom(c as Record<string, any>) : undefined))
+        .filter((c): c is Chapter => !!c);
+      if (inline.length && inline.length === entries.length) item.chapters = inline;
     }
     items.set(id, item);
     itemFor.set(raw, item);
@@ -183,7 +206,11 @@ export async function getCatalog(token: string): Promise<CatalogItem[]> {
       const moduleItem = itemFor.get(resolved as Raw);
       if (moduleItem) {
         if (!program.modules!.some((m) => m.id === moduleItem.id)) {
-          program.modules!.push({ id: moduleItem.id, name: moduleItem.name });
+          program.modules!.push({
+            id: moduleItem.id,
+            name: moduleItem.name,
+            chapterCount: moduleItem.chapters?.length ?? moduleItem.chapterIds?.length ?? 0,
+          });
         }
         if (!moduleItem.programs!.some((p) => p.id === program.id)) {
           moduleItem.programs!.push({ id: program.id, name: program.name });

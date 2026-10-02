@@ -1,21 +1,64 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Kind = "program" | "modul";
-type Ref = { id: string; name: string };
+type Ref = { id: string; name: string; chapterCount?: number };
+type Section = { name: string; pages: string[] };
+type Chapter = { id: string; name: string; description?: string; sections?: Section[] };
 type Recommendation = {
   id: string;
   kind: Kind;
   name: string;
   description: string;
   reason: string;
+  chapterCount: number;
+  chapters?: Chapter[];
   modules: Ref[];
   programs: Ref[];
 };
 type Turn =
   | { role: "user"; text: string }
   | { role: "assistant"; message: string; recommendations: Recommendation[] };
+
+// Hämtar modulers kapitel: samma modul hämtas bara en gång och högst tre hämtningar
+// körs samtidigt, så att flera kort inte belastar API:t på en gång.
+function makeChapterLoader(token: string) {
+  const loaded = new Map<string, Promise<Chapter[]>>();
+  const queue: (() => void)[] = [];
+  let running = 0;
+  const MAX_PARALLEL = 3;
+
+  function next() {
+    if (running >= MAX_PARALLEL) return;
+    const job = queue.shift();
+    if (job) job();
+  }
+
+  return (moduleId: string) => {
+    const existing = loaded.get(moduleId);
+    if (existing) return existing;
+    const promise = new Promise<Chapter[]>((resolve, reject) => {
+      queue.push(() => {
+        running++;
+        api<{ chapters: Chapter[] }>("/api/chapters", token, { id: moduleId })
+          .then(({ chapters }) => resolve(chapters), reject)
+          .finally(() => {
+            running--;
+            next();
+          });
+      });
+      next();
+    });
+    // Ett misslyckat försök ska gå att göra om.
+    promise.catch(() => loaded.delete(moduleId));
+    loaded.set(moduleId, promise);
+    return promise;
+  };
+}
+
+// Hämtar en moduls kapitel. Ligger i en context så att korten inte behöver känna till token.
+const ChaptersContext = createContext<(moduleId: string) => Promise<Chapter[]>>(async () => []);
 
 const STARTERS = [
   "Jag sover dåligt och är stressad",
@@ -185,6 +228,8 @@ function Chat({
     inputRef.current?.focus();
   }
 
+  const loadChapters = useRef(makeChapterLoader(token)).current;
+
   // Dela upp samtalet i utbyten: en fråga från användaren och svaret på den.
   const exchanges: { user: Extract<Turn, { role: "user" }>; reply?: Extract<Turn, { role: "assistant" }> }[] = [];
   for (const turn of turns) {
@@ -194,6 +239,7 @@ function Chat({
   const empty = exchanges.length === 0;
 
   return (
+    <ChaptersContext.Provider value={loadChapters}>
     <div className="app">
       <header className="topbar">
         <div className="brand">
@@ -303,6 +349,7 @@ function Chat({
         )}
       </div>
     </div>
+    </ChaptersContext.Provider>
   );
 }
 
@@ -375,6 +422,13 @@ function RecommendationCard({
 
       {rec.kind === "modul" && (
         <div className="relation">
+          <span className="relation-title">Kapitel i modulen:</span>
+          <ChapterList moduleId={rec.id} initial={rec.chapters} />
+        </div>
+      )}
+
+      {rec.kind === "modul" && (
+        <div className="relation">
           {rec.programs.length ? (
             <>
               <span className="relation-title">Ingår i {rec.programs.length === 1 ? "programmet" : "programmen"}:</span>
@@ -400,15 +454,120 @@ function RecommendationCard({
       )}
 
       {rec.kind === "program" && rec.modules.length > 0 && (
-        <details className="relation">
-          <summary>Innehåller {rec.modules.length} moduler</summary>
-          <ul>
+        <div className="relation">
+          <span className="relation-title">
+            Programmet innehåller {rec.modules.length} {rec.modules.length === 1 ? "modul" : "moduler"}:
+          </span>
+          <ol className="program-modules">
             {rec.modules.map((m, i) => (
-              <li key={m.id || i}>{m.name}</li>
+              <li key={m.id || i}>
+                {m.id ? (
+                  <ProgramModuleRow module={m} />
+                ) : (
+                  <span>
+                    <span className="badge modul">◇ Modul</span> {m.name}
+                  </span>
+                )}
+              </li>
             ))}
-          </ul>
-        </details>
+          </ol>
+        </div>
       )}
     </article>
+  );
+}
+
+// En modul i ett program. Kapitlen hämtas först när raden fälls ut.
+function ProgramModuleRow({ module }: { module: Ref }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary>
+        <span className="badge modul">◇ Modul</span> {module.name}
+        {module.chapterCount ? <span className="count"> · {module.chapterCount} kapitel</span> : null}
+      </summary>
+      {open && <ChapterList moduleId={module.id} />}
+    </details>
+  );
+}
+
+// Hämtar kapitlen direkt när listan visas. Avsnitt och sidor går att fälla ut per kapitel.
+function ChapterList({ moduleId, initial }: { moduleId: string; initial?: Chapter[] }) {
+  const loadChapters = useContext(ChaptersContext);
+  const [chapters, setChapters] = useState<Chapter[] | undefined>(initial);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (initial) return;
+    let cancelled = false;
+    setError("");
+    loadChapters(moduleId)
+      .then((c) => !cancelled && setChapters(c))
+      .catch((err) => !cancelled && setError((err as Error).message));
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId, initial, loadChapters, attempt]);
+
+  if (error) {
+    return (
+      <p className="error small">
+        {error}{" "}
+        <button type="button" className="link" onClick={() => setAttempt((n) => n + 1)}>
+          Försök igen
+        </button>
+      </p>
+    );
+  }
+  if (!chapters) return <p className="muted small chapters-loading">Hämtar kapitel…</p>;
+  if (chapters.length === 0) return <p className="muted small">Inga kapitel.</p>;
+
+  return (
+    <ol className="chapter-list chapters">
+      {chapters.map((c) => {
+        const sections = c.sections ?? [];
+        return (
+          <li key={c.id}>
+            {sections.length > 0 ? (
+              <details>
+                <summary>
+                  <span className="chapter-name">{c.name}</span>{" "}
+                  <span className="count">
+                    ({sections.length} {sections.length === 1 ? "avsnitt" : "avsnitt"})
+                  </span>
+                </summary>
+                {c.description && <p className="chapter-desc">{c.description}</p>}
+                <ul className="sections">
+                  {sections.map((section, i) => (
+                    <li key={i}>
+                      {section.name}
+                      {section.pages.length > 0 && (
+                        <span className="count">
+                          {" "}
+                          ({section.pages.length} {section.pages.length === 1 ? "sida" : "sidor"})
+                        </span>
+                      )}
+                      {section.pages.length > 0 && (
+                        <ul className="pages">
+                          {section.pages.map((p, j) => (
+                            <li key={j}>{p}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : (
+              <>
+                <span className="chapter-name">{c.name}</span>
+                {c.description && <p className="chapter-desc">{c.description}</p>}
+              </>
+            )}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
