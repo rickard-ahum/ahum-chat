@@ -50,3 +50,4 @@ Miljövariabler:
 | `ANTHROPIC_WORKSPACE_ID` | – | Krävs för nycklar som inte hör till en workspace |
 | `AHUM_API_BASE` | `https://prod-icbt-api.ahum.se/api` | Bas-URL för Ahum-API:t |
 # ahum-recommendations
+# ahum-chat
